@@ -57,7 +57,7 @@ def run_step1(file, forward, forward_len, reverse, reverse_len, path='/tmp/covid
     genomes = {}
 
     # KAT limited but super fast:
-    subprocess.call('kat sect -t ' + str(cpu) + ' -m ' + str(forward_len) + ' -o ' + path + '_forward ' + str(file) + ' ' + str(forward), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
+    subprocess.call('/root/miniconda3/bin/kat sect -t ' + str(cpu) + ' -m ' + str(forward_len) + ' -o ' + path + '_forward ' + str(file) + ' ' + str(forward), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
     if os.path.exists(path + '_forward-stats.tsv'):
         with open(path + '_forward-stats.tsv', 'r') as fwin:
             for line in fwin:
@@ -71,7 +71,7 @@ def run_step1(file, forward, forward_len, reverse, reverse_len, path='/tmp/covid
         os.remove(path + '_forward-stats.tsv')
         os.remove(path + '_forward-counts.cvg')
 
-    subprocess.call('kat sect -t ' + str(cpu) + ' -m ' + str(reverse_len) + ' -o ' + path + '_reverse ' + str(file) + ' ' + str(reverse), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
+    subprocess.call('/root/miniconda3/bin/kat sect -t ' + str(cpu) + ' -m ' + str(reverse_len) + ' -o ' + path + '_reverse ' + str(file) + ' ' + str(reverse), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
     if os.path.exists(path + '_reverse-stats.tsv'):
         with open(path + '_reverse-stats.tsv', 'r') as rvin:
             for line in rvin:
@@ -114,13 +114,14 @@ def run_step2(genomes, file, forward, reverse, probe=None, amplicon=None, all=Fa
     if len(check_sequence) > 0:
         subprocess.call('cat ' + forward + ' ' + reverse + '> ' + path + '_both.fa', stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
 
+        print("Start amplicon")
         if probe is not None or amplicon is not None:
             with open(path + '_both.fa', 'a') as outfile:
                 if probe is not None:
                     outfile.write('>probe\n' + str(probe).upper() + '\n')
                 if amplicon is not None:
                     outfile.write('>amplicon\n' + str(amplicon).upper() + '\n')
-
+        print("Start water")
         for record in SeqIO.parse(file, 'fasta'):
             if all or record.id in check_sequence:
                 try:
@@ -145,7 +146,7 @@ def run_step2(genomes, file, forward, reverse, probe=None, amplicon=None, all=Fa
                                 print('Warning: "water" has generated a critical error for ' + record.id + ' sequence will be skipped.', file=sys.stderr)
                 except:
                     print('Error: "water" has generated a critical error for ' + record.id + ' sequence will be skipped.', file=sys.stderr)
-
+        print("End water")
         if os.path.exists(path + '_both.fa'):
             os.remove(path + '_both.fa')
         if os.path.exists(path + '_local.aln.fa'):
