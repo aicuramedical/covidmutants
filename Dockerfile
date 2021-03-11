@@ -1,25 +1,19 @@
 FROM biopython/biopython
-
-WORKDIR /usr/src/app
+ENV PATH=$PATH:/usr/share/miniconda3/bin
 
 VOLUME [ "/output" ]
-# COPY requirements.txt ./
-# RUN pip install --no-cache-dir -r requirements.txt
-RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
-RUN sh Miniconda3-latest-Linux-x86_64.sh -b
-RUN /root/miniconda3/bin/conda config --add channels defaults
-RUN /root/miniconda3/bin/conda config --add channels bioconda
-RUN /root/miniconda3/bin/conda config --add channels conda-forge
 
-RUN /root/miniconda3/bin/conda install bwa -y
-RUN /root/miniconda3/bin/conda install kat -y
-#RUN git clone https://github.com/Homebrew/brew ~/.linuxbrew/Homebrew
-#RUN mkdir ~/.linuxbrew/bin
-#RUN ln -s ../Homebrew/bin/brew ~/.linuxbrew/bin
-#RUN eval $(~/.linuxbrew/bin/brew shellenv)
+RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh \
+   && sh Miniconda3-latest-Linux-x86_64.sh -b -p /usr/share/miniconda3 \
+   && /usr/share/miniconda3/bin/conda config --add channels defaults \
+   && /usr/share/miniconda3/bin/conda config --add channels bioconda \
+   && /usr/share/miniconda3/bin/conda config --add channels conda-forge \
+   && /usr/share/miniconda3/bin/conda install boost-cpp -y \
+   && /usr/share/miniconda3/bin/conda install kat -y \
+   && rm -f Miniconda3-latest-Linux-x86_64.sh
 
-#RUN /root/.linuxbrew/bin/brew install brewsci/bio/kat
-COPY . .
+COPY covid.py /usr/local/bin
+WORKDIR /output
 
-# CMD [ "python", "./covid.py" ]
-
+ENTRYPOINT [ "python3", "/usr/local/bin/covid.py" ]
+CMD [ "-h" ]

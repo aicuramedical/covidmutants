@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # coding=utf-8
-# title           :covid_monitor.py
+# title           :covid.py
 # description     :Covid primer monitor
-# date            :20210118
-# version         :0.1
+# date            :20210311
+# version         :0.2
 # copyright       :Michaël Bekaert
 # notes           :Needs KAT and emboss (water) and Biopython.
 # ==============================================================================
@@ -18,7 +18,7 @@ import tempfile
 from functools import partial
 from Bio import SeqIO
 
-release = '0.1'
+release = '0.2'
 
 
 def collect_new(file, forward, reverse, path='/tmp/covid'):
@@ -30,22 +30,20 @@ def collect_new(file, forward, reverse, path='/tmp/covid'):
     with open(path + '_reverse.fa', 'w') as outfile:
         outfile.write('>reverse\n' + str(reverse).upper() + '\n')
 
-    print('Open gnomes')
     # check duplicated names and fix names
     names = []
 
     _open = partial(gzip.open, mode='rt') if file.endswith('.gz') else open
     with open(path + '_genomes.fa', 'w') as genome, _open(file) as f:
-        print('open genome file')
         for record in SeqIO.parse(f, 'fasta'):
             name = record.description.replace(' ', '_').replace('\t', '_')
-            print('Genome name: ' + name)
+            print('  >>' + name, file=sys.stdout)
             if name not in names:
                 names.append(name)
                 genome.write('>' + name + '\n' + str(record.seq).upper().replace('U', 'T') + '\n')
             else:
                 print('"' + name + '" already exists!', file=sys.stderr)
-    print('Prepare return of data collection')
+
     if os.path.getsize(path + '_genomes.fa') > 32 and forward_len > 0 and reverse_len > 0:
         return [path + '_genomes.fa', path + '_forward.fa', forward_len, path + '_reverse.fa', reverse_len]
 
@@ -57,7 +55,7 @@ def run_step1(file, forward, forward_len, reverse, reverse_len, path='/tmp/covid
     genomes = {}
 
     # KAT limited but super fast:
-    subprocess.call('/root/miniconda3/bin/kat sect -t ' + str(cpu) + ' -m ' + str(forward_len) + ' -o ' + path + '_forward ' + str(file) + ' ' + str(forward), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
+    subprocess.call('kat sect -t ' + str(cpu) + ' -m ' + str(forward_len) + ' -o ' + path + '_forward ' + str(file) + ' ' + str(forward), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
     if os.path.exists(path + '_forward-stats.tsv'):
         with open(path + '_forward-stats.tsv', 'r') as fwin:
             for line in fwin:
@@ -71,7 +69,7 @@ def run_step1(file, forward, forward_len, reverse, reverse_len, path='/tmp/covid
         os.remove(path + '_forward-stats.tsv')
         os.remove(path + '_forward-counts.cvg')
 
-    subprocess.call('/root/miniconda3/bin/kat sect -t ' + str(cpu) + ' -m ' + str(reverse_len) + ' -o ' + path + '_reverse ' + str(file) + ' ' + str(reverse), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
+    subprocess.call('kat sect -t ' + str(cpu) + ' -m ' + str(reverse_len) + ' -o ' + path + '_reverse ' + str(file) + ' ' + str(reverse), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
     if os.path.exists(path + '_reverse-stats.tsv'):
         with open(path + '_reverse-stats.tsv', 'r') as rvin:
             for line in rvin:
@@ -114,14 +112,14 @@ def run_step2(genomes, file, forward, reverse, probe=None, amplicon=None, all=Fa
     if len(check_sequence) > 0:
         subprocess.call('cat ' + forward + ' ' + reverse + '> ' + path + '_both.fa', stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
 
-        print("Start amplicon")
+        print('  Start amplicon', file=sys.stdout)
         if probe is not None or amplicon is not None:
             with open(path + '_both.fa', 'a') as outfile:
                 if probe is not None:
                     outfile.write('>probe\n' + str(probe).upper() + '\n')
                 if amplicon is not None:
                     outfile.write('>amplicon\n' + str(amplicon).upper() + '\n')
-        print("Start water")
+        print('  Start water', file=sys.stdout)
         for record in SeqIO.parse(file, 'fasta'):
             if all or record.id in check_sequence:
                 try:
@@ -146,7 +144,7 @@ def run_step2(genomes, file, forward, reverse, probe=None, amplicon=None, all=Fa
                                 print('Warning: "water" has generated a critical error for ' + record.id + ' sequence will be skipped.', file=sys.stderr)
                 except:
                     print('Error: "water" has generated a critical error for ' + record.id + ' sequence will be skipped.', file=sys.stderr)
-        print("End water")
+
         if os.path.exists(path + '_both.fa'):
             os.remove(path + '_both.fa')
         if os.path.exists(path + '_local.aln.fa'):
@@ -201,9 +199,7 @@ if __name__ == '__main__':
 
     if os.path.exists(args.genomesfile):
         path = os.path.join(tempfile._get_default_tempdir(), next(tempfile._get_candidate_names()))
-        print('Start Preprocessing with: file='+args.genomesfile+' --forward='+args.forward+' --reverse='+args.reverse+' --path='+path)
         ret = collect_new(args.genomesfile, args.forward, args.reverse, path=path)
-        print('Finished Preprocessing with status: ' + str(ret))
         if ret:
             (file, forward, forward_len, reverse, reverse_len) = ret
             genomes = run_step1(file, forward, forward_len, reverse, reverse_len, cpu=args.threads, path=path)
