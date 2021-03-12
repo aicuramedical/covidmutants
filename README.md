@@ -31,27 +31,27 @@ docker build --rm=true -t covidmutants .
 #### Run a test
 
 ```sh
-docker run -i -t --rm -v $(pwd):$(pwd) -u $(id -u):$(id -g) covidmutants \
+docker run -i -t --rm -v "$(pwd)":"$(pwd)" covidmutants \
   -threads 15 \
   -forward TATgCCATTAgTgCAAAgAATAgAgCTCgCAC \
   -reverse GTAATTGGAAcAAGcAAATTcTATGGTGGTTG \
   -amplicon TATGCCATTAGTGCAAAGAATAGAGCTCGCACCGTAGCTGGTGTCTCTATCTGTAGTACTATGACCAATAGACAGTTTCATCAAAAATTATTGAAATCAATAGCCGCCACTAGAGGAGCTACTGTAGTAATTGGAACAAGCAAATTCTATGGTGGTTG \
-  -fasta $(pwd)/resources/gisaid_hcov-19_2021_02_12_21.fasta.gz \
-  -o $(pwd)/test99
+  -o "$(pwd)/test"
+  -fasta "$(pwd)/resources/gisaid_hcov-19_2021_02_12_21.fasta.gz" \
 ```
 
 #### Start the analysis
 
-With a `covid_genomes.fasta` as your multi-sequence fasta files:
+With a `covid_genomes.fasta` as your multi-sequence fasta files (gzip compressed file are accepted).
 
 ```sh
-docker run -i -t --rm -v $(pwd):$(pwd) -u $(id -u):$(id -g) covidmutants \
+docker run -i -t --rm -v "$(pwd)":"$(pwd)" -u $(id -u):$(id -g) covidmutants \
   -threads 15 \
   -forward TATgCCATTAgTgCAAAgAATAgAgCTCgCAC \
   -reverse GTAATTGGAAcAAGcAAATTcTATGGTGGTTG \
   -amplicon TATGCCATTAGTGCAAAGAATAGAGCTCGCACCGTAGCTGGTGTCTCTATCTGTAGTACTATGACCAATAGACAGTTTCATCAAAAATTATTGAAATCAATAGCCGCCACTAGAGGAGCTACTGTAGTAATTGGAACAAGCAAATTCTATGGTGGTTG \
-  -fasta $(pwd)/covid_genomes.fasta(.gz) \
-  -o $(pwd)/output
+  -o "$(pwd)/output"
+  -fasta "$(pwd)/covid_genomes.fasta(.gz)" \
 ```
 
 ## Usage

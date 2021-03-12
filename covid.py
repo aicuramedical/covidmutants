@@ -124,7 +124,7 @@ def run_step2(genomes, file, forward, reverse, probe=None, amplicon=None, all=Fa
             if all or record.id in check_sequence:
                 try:
                     if output is not None and record.id in check_sequence:
-                        with open(output + '.fail.fa', 'a') as outfile:
+                        with open(output + '.fail.fasta', 'a') as outfile:
                             outfile.write('>' + str(record.id) + '\n' + str(record.seq) + '\n')
                     with open(path + '_local.fa', 'w') as outaln:
                         outaln.write('>local\n' + str(record.seq) + '\n')
@@ -190,9 +190,9 @@ if __name__ == '__main__':
     parser.add_argument('-reverse', '-2', dest='reverse', type=str, required=True, help='Specify reverse primer')
     parser.add_argument('-probe', dest='probe', type=str, help='Specify probe sequence')
     parser.add_argument('-amplicon', dest='amplicon', type=str, help='Specify amplicon sequence')
-    parser.add_argument('-output', '-out', '-o', dest='outfile', type=str, default='output', help='Specify output file')
+    parser.add_argument('-output', '-out', '-o', dest='outfile', type=str, default='output', help='Specify output file prefix')
     parser.add_argument('-threads', '-t', dest='threads', type=int, default=1, help='Maximum threads')
-    parser.add_argument('-all', '-a', dest='all', action='store_true', default=False, help='Test all sequences (VERY slow)')
+    parser.add_argument('-all', '-a', dest='all', action='store_true', default=False, help='Test all sequences (Slow)')
     parser.add_argument('-json', dest='json', action='store_true', default=False, help='Export results matrix as JSON file (Experimental)')
 
     args = parser.parse_args()
