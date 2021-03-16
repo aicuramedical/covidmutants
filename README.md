@@ -4,11 +4,11 @@
 
 We foster the openness, integrity, and reproducibility of scientific research.
 
+
 ## How to use this repository?
 
-This repository host both the scripts and tools developed by this study. Feel free to adapt the scripts and tools, but remember to cite their authors!
-
-To look at our scripts and raw results, **browse** through this repository. If you want to reproduce our results you will need to **clone** this repository, build the docker, and the run all the scripts. If you want to use our data for our own research, **fork** this repository and **cite** the authors.
+This repository hosts the scripts and tools created for research.
+Please feel free to modify the scripts, please remember to credit the creators!
 
 
 ## Prepare a docker
@@ -36,8 +36,9 @@ docker run -i -t --rm -v "$(pwd)":"$(pwd)" covidmutants \
   -forward TATgCCATTAgTgCAAAgAATAgAgCTCgCAC \
   -reverse GTAATTGGAAcAAGcAAATTcTATGGTGGTTG \
   -amplicon TATGCCATTAGTGCAAAGAATAGAGCTCGCACCGTAGCTGGTGTCTCTATCTGTAGTACTATGACCAATAGACAGTTTCATCAAAAATTATTGAAATCAATAGCCGCCACTAGAGGAGCTACTGTAGTAATTGGAACAAGCAAATTCTATGGTGGTTG \
-  -o "$(pwd)/test"
-  -fasta "$(pwd)/resources/gisaid_hcov-19_2021_02_12_21.fasta.gz" \
+  -o "$(pwd)"/test \
+  -v \
+  -fasta "$(pwd)"/test/test.fa.gz
 ```
 
 #### Start the analysis
@@ -50,17 +51,19 @@ docker run -i -t --rm -v "$(pwd)":"$(pwd)" -u $(id -u):$(id -g) covidmutants \
   -forward TATgCCATTAgTgCAAAgAATAgAgCTCgCAC \
   -reverse GTAATTGGAAcAAGcAAATTcTATGGTGGTTG \
   -amplicon TATGCCATTAGTGCAAAGAATAGAGCTCGCACCGTAGCTGGTGTCTCTATCTGTAGTACTATGACCAATAGACAGTTTCATCAAAAATTATTGAAATCAATAGCCGCCACTAGAGGAGCTACTGTAGTAATTGGAACAAGCAAATTCTATGGTGGTTG \
-  -o "$(pwd)/output"
-  -fasta "$(pwd)/covid_genomes.fasta(.gz)" \
+  -o "$(pwd)"/output \
+  -fasta "$(pwd)"/covid_genomes.fasta(.gz)
 ```
+
 
 ## Usage
 
 ```plaintext
 usage: docker run -i -t --rm -v $(pwd):$(pwd) covidmutants
                 [-h] -fasta GENOMESFILE -forward FORWARD -reverse REVERSE
-                [-probe PROBE] [-amplicon AMPLICON] [-output OUTFILE]
-                [-threads THREADS] [-all] [-json]
+                [-probe PROBE] [-amplicon AMPLICON] [-max MAX_DIFF]
+                [-output OUTFILE] [-threads THREADS] [-all] [-json]
+
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -72,6 +75,8 @@ optional arguments:
                         Specify reverse primer
   -probe PROBE          Specify probe sequence
   -amplicon AMPLICON    Specify amplicon sequence
+  -max MAX_DIFF, -m MAX_DIFF
+                        Maximum sequence variations before querying sequencing accuracy
   -output OUTFILE, -out OUTFILE, -o OUTFILE
                         Specify output file
   -threads THREADS, -t THREADS
@@ -80,13 +85,23 @@ optional arguments:
   -json                 Export results matrix as JSON file (Experimental)
 ```
 
+
 ## Methodology
 
-...
+[to be improved]
+
+1. Validate and clean up the sequences (check name and duplication)
+2. Use KAT to quickly recover the exact match (k-mer = primer length).
+3. Use Smith-Waterman local alignment to find sequence variations.
+4. Report
+
 
 ## Results
 
-...
+#### \<output\>.tsv file
+
+For each sequence submitted, the name and variation with the forward and reverse primers are reported. If the amplicon and/or probe sequence were provided, the sequence variations are reported only if the primers failed to pass the filter (or the parameter `-all` was specified.)
+
 
 ```plaintext
 GENOME_ID       PASS/FAIL   FORWARD_DIFF                          REVERSE_DIFF                        AMPLICON_DIFF
@@ -97,6 +112,16 @@ N00641/2020     FAIL        ........A......CCt.c.c....t.....     ...............
 N00663/2020     PASS        ................................     ................................
 IDF-IPP01211    PASS        ................................     ................................
 ```
+
+#### \<output\>.fail.fa file
+
+FAIL indicates that the primer sequences did not match the primers submitted. An extra file \<output\>.fail.fa is created with those sequences for manual validation.
+
+#### \<output\>.issue.fa file
+
+If the sequences (primer or amplicon) are found but have too many sequence variants (e.g. more than `-max`), the accuracy of their sequences is questioned.
+The sequences are reported separately in the \<output\>.issue.fa file.
+
 
 ## Issues
 
