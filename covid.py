@@ -2,10 +2,10 @@
 # coding=utf-8
 # title           :covid.py
 # description     :Covid primer monitor
-# date            :20210316
-# version         :0.3
-# copyright       :MichaÃ«l Bekaert
-# notes           :Needs KAT and emboss (water) and Biopython.
+# date            :20210518
+# version         :1.0
+# copyright       :Michaël Bekaert
+# notes           :Needs KAT, emboss (water) and Biopython.
 # ==============================================================================
 
 import argparse
@@ -19,7 +19,7 @@ from functools import partial
 
 from Bio import SeqIO
 
-release = '0.3'
+release = '1.0'
 
 
 def collect_new(file, forward, reverse, path='/tmp/covid', verbose=False):

@@ -1,0 +1,10 @@
+sudo: required
+language: python
+python:
+- 3.9
+services:
+- docker
+install:
+- docker build --rm=true -t covidmutants .
+script:
+- docker run -i -t --rm -v "$(pwd)":"$(pwd)" covidmutants -threads 2 -forward TATgCCATTAgTgCAAAgAATAgAgCTCgCAC -reverse GTAATTGGAAcAAGcAAATTcTATGGTGGTTG -amplicon TATGCCATTAGTGCAAAGAATAGAGCTCGCACCGTAGCTGGTGTCTCTATCTGTAGTACTATGACCAATAGACAGTTTCATCAAAAATTATTGAAATCAATAGCCGCCACTAGAGGAGCTACTGTAGTAATTGGAACAAGCAAATTCTATGGTGGTTG -o "$(pwd)"/test -v -fasta "$(pwd)"/test/test.fa.gz

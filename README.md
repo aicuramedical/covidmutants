@@ -1,5 +1,3 @@
-> Warning: This is a pre-release version, we are actively developing this repository. Issues, bugs and features will happen, rise and change.
-
 # COVIDmutants
 
 We foster the openness, integrity, and reproducibility of scientific research.
@@ -8,7 +6,7 @@ We foster the openness, integrity, and reproducibility of scientific research.
 ## How to use this repository?
 
 This repository hosts the scripts and tools created for research.
-Please feel free to modify the scripts, please remember to credit the creators!
+Please feel free to modify the scripts, please remember to credit the authors.
 
 
 ## Prepare a docker
@@ -38,7 +36,7 @@ docker run -i -t --rm -v "$(pwd)":"$(pwd)" covidmutants \
   -amplicon TATGCCATTAGTGCAAAGAATAGAGCTCGCACCGTAGCTGGTGTCTCTATCTGTAGTACTATGACCAATAGACAGTTTCATCAAAAATTATTGAAATCAATAGCCGCCACTAGAGGAGCTACTGTAGTAATTGGAACAAGCAAATTCTATGGTGGTTG \
   -o "$(pwd)"/test \
   -v \
-  -fasta "$(pwd)"/test/test.fa.gz
+  -fasta "$(pwd)"/tests/test.fasta.gz
 ```
 
 #### Start the analysis
@@ -52,7 +50,7 @@ docker run -i -t --rm -v "$(pwd)":"$(pwd)" -u $(id -u):$(id -g) covidmutants \
   -reverse GTAATTGGAAcAAGcAAATTcTATGGTGGTTG \
   -amplicon TATGCCATTAGTGCAAAGAATAGAGCTCGCACCGTAGCTGGTGTCTCTATCTGTAGTACTATGACCAATAGACAGTTTCATCAAAAATTATTGAAATCAATAGCCGCCACTAGAGGAGCTACTGTAGTAATTGGAACAAGCAAATTCTATGGTGGTTG \
   -o "$(pwd)"/output \
-  -fasta "$(pwd)"/covid_genomes.fasta(.gz)
+  -fasta "$(pwd)"/covid_genomes.fasta
 ```
 
 
@@ -88,12 +86,7 @@ optional arguments:
 
 ## Methodology
 
-[to be improved]
-
-1. Validate and clean up the sequences (check name and duplication)
-2. Use KAT to quickly recover the exact match (k-mer = primer length).
-3. Use Smith-Waterman local alignment to find sequence variations.
-4. Report
+We used a fast and scalable approach in order to screen the ever-growing number of genome sequences. To do so, we used K-mer of the exact size of the primer to mind through the genome using [KAT](https://github.com/TGAC/KAT) v2.4.2 mode "sect" ([Mapleson 2017](https://doi.org/10.1093/bioinformatics/btw663)). Kat calculates the K-mer coverage across every genome and reported the primer-coverage/integrity. Sequence that reported imperfect primer presence, were then properly aligned against the primers and the amplicon using Smith-Waterman ([Smith 1981](https://doi.org/10.1016/0022-2836%2881%2990087-5)) [local alignment](http://emboss.open-bio.org/rel/rel6/apps/water.html) to find sequence variations. A custom python script handles the pipeline and reporting.
 
 
 ## Results
