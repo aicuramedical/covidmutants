@@ -4,7 +4,7 @@ ENV PATH=$PATH:/usr/share/miniconda3/bin
 VOLUME [ "/output" ]
 
 RUN apt -y update \
-   && DEBIAN_FRONTEND=noninteractive apt -y install --no-install-recommends wget \
+   && DEBIAN_FRONTEND=noninteractive apt -y install --no-install-recommends wget emboss \
    && apt clean \
    && rm -rf /var/lib/apt/lists/*
 
