@@ -2,7 +2,7 @@
 # coding=utf-8
 # title           :covid.py
 # description     :Covid primer monitor
-# date            :20210518
+# date            :20210519
 # version         :1.0
 # copyright       :Michaël Bekaert
 # notes           :Needs KAT, emboss (water) and Biopython.
@@ -56,7 +56,6 @@ def run_step1(file, forward, forward_len, reverse, reverse_len, path='/tmp/covid
     print('Processing the sequences with KAT', file=sys.stdout)
     genomes = {}
 
-    # KAT limited but super fast:
     subprocess.call('kat sect -t ' + str(cpu) + ' -m ' + str(forward_len) + ' -o ' + path + '_forward ' + str(file) + ' ' + str(forward), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
     if os.path.exists(path + '_forward-stats.tsv'):
         with open(path + '_forward-stats.tsv', 'r') as fwin:

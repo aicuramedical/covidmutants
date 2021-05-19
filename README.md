@@ -1,13 +1,23 @@
 # COVIDmutants
-
-We foster the openness, integrity, and reproducibility of scientific research.
+COVIDmutants is fast and scalable pipeline to check for the intact presence of SARS-CoV-2 Primers in an enormous collection of genome sequences and to report the findings.
 
 
 ## How to use this repository?
 
-This repository hosts the scripts and tools created for research.
+We foster the openness, integrity, and reproducibility of scientific research. This repository hosts the scripts and tools created for research.
 Please feel free to modify the scripts, please remember to credit the authors.
 
+
+## Prepare a docker
+
+All required files and tools run in a self-contained [docker](https://www.docker.com/) image.
+
+#### Clone the repository
+
+```sh
+git clone https://github.com/aicuramedical/covidmutants.git
+cd covidmutants
+```
 
 ## Prepare a docker
 
@@ -29,29 +39,28 @@ docker build --rm=true -t covidmutants .
 #### Run a test
 
 ```sh
-docker run -i -t --rm -v "$(pwd)":"$(pwd)" covidmutants \
-  -threads 15 \
+docker run -i -t --rm covidmutants \
+  -threads 2 -v \
   -forward TATgCCATTAgTgCAAAgAATAgAgCTCgCAC \
   -reverse GTAATTGGAAcAAGcAAATTcTATGGTGGTTG \
   -amplicon TATGCCATTAGTGCAAAGAATAGAGCTCGCACCGTAGCTGGTGTCTCTATCTGTAGTACTATGACCAATAGACAGTTTCATCAAAAATTATTGAAATCAATAGCCGCCACTAGAGGAGCTACTGTAGTAATTGGAACAAGCAAATTCTATGGTGGTTG \
-  -o "$(pwd)"/test \
-  -v \
-  -fasta "$(pwd)"/tests/test.fasta.gz
+  -fasta test.fa.gz
 ```
 
-#### Start the analysis
 
-With a `covid_genomes.fasta` as your multi-sequence fasta files (gzip compressed file are accepted).
+## Dependencies
 
-```sh
-docker run -i -t --rm -v "$(pwd)":"$(pwd)" -u $(id -u):$(id -g) covidmutants \
-  -threads 15 \
-  -forward TATgCCATTAgTgCAAAgAATAgAgCTCgCAC \
-  -reverse GTAATTGGAAcAAGcAAATTcTATGGTGGTTG \
-  -amplicon TATGCCATTAGTGCAAAGAATAGAGCTCGCACCGTAGCTGGTGTCTCTATCTGTAGTACTATGACCAATAGACAGTTTCATCAAAAATTATTGAAATCAATAGCCGCCACTAGAGGAGCTACTGTAGTAATTGGAACAAGCAAATTCTATGGTGGTTG \
-  -o "$(pwd)"/output \
-  -fasta "$(pwd)"/covid_genomes.fasta
-```
+If you use the docker, we will not need to check dependency as the Dockerfile will contain all you need. But here are the details anyway:
+
+* [KAT](https://github.com/TGAC/KAT) v2.4.2+
+* [EMBOSS](http://emboss.open-bio.org/) v6.6.0+ suit, only [_water_](http://emboss.open-bio.org/rel/rel6/apps/water.html) is required for local alignments
+* [Python](https://www.python.org/) v3+ with [biopython](https://biopython.org/)
+
+
+
+## Methodology
+
+We used a fast and scalable approach in order to screen the ever-growing number of genome sequences. To do so, we used K-mer of the exact size of the primer to mind through the genome using KAT mode "sect" ([Mapleson 2017](https://doi.org/10.1093/bioinformatics/btw663)). Kat calculates the K-mer coverage across every genome and reported the primer-coverage/integrity. Sequence that reported imperfect primer presence, were then properly aligned against the primers and the amplicon using Smith-Waterman ([Smith 1981](https://doi.org/10.1016/0022-2836%2881%2990087-5)) local alignment to find sequence variations. A custom python script handles the pipeline and reporting.
 
 
 ## Usage
@@ -83,10 +92,19 @@ optional arguments:
   -json                 Export results matrix as JSON file (Experimental)
 ```
 
+#### Start your own analysis
 
-## Methodology
+With a `covid_genomes.fasta` as your multi-sequence fasta files (gzip compressed file are accepted) in the current directory.
 
-We used a fast and scalable approach in order to screen the ever-growing number of genome sequences. To do so, we used K-mer of the exact size of the primer to mind through the genome using [KAT](https://github.com/TGAC/KAT) v2.4.2 mode "sect" ([Mapleson 2017](https://doi.org/10.1093/bioinformatics/btw663)). Kat calculates the K-mer coverage across every genome and reported the primer-coverage/integrity. Sequence that reported imperfect primer presence, were then properly aligned against the primers and the amplicon using Smith-Waterman ([Smith 1981](https://doi.org/10.1016/0022-2836%2881%2990087-5)) [local alignment](http://emboss.open-bio.org/rel/rel6/apps/water.html) to find sequence variations. A custom python script handles the pipeline and reporting.
+```sh
+docker run -i -t --rm -v "$(pwd)":"$(pwd)" -u $(id -u):$(id -g) covidmutants \
+  -threads 15 \
+  -forward TATgCCATTAgTgCAAAgAATAgAgCTCgCAC \
+  -reverse GTAATTGGAAcAAGcAAATTcTATGGTGGTTG \
+  -amplicon TATGCCATTAGTGCAAAGAATAGAGCTCGCACCGTAGCTGGTGTCTCTATCTGTAGTACTATGACCAATAGACAGTTTCATCAAAAATTATTGAAATCAATAGCCGCCACTAGAGGAGCTACTGTAGTAATTGGAACAAGCAAATTCTATGGTGGTTG \
+  -o "$(pwd)"/output \
+  -fasta "$(pwd)"/covid_genomes.fasta
+```
 
 
 ## Results
@@ -104,6 +122,7 @@ CAMC-11B5E57    PASS        ................................     ...............
 N00641/2020     FAIL        ........A......CCt.c.c....t.....     ................................     .......................................................
 N00663/2020     PASS        ................................     ................................
 IDF-IPP01211    PASS        ................................     ................................
+...
 ```
 
 #### \<output\>.fail.fa file
@@ -130,10 +149,3 @@ You are invited to contribute new features, fixes, or updates, large or small; w
 ## License and distribution
 
 The content of this project itself including the raw data and work are licensed under the [Creative Commons Attribution-ShareAlike 4.0 International License](http://creativecommons.org/licenses/by-sa/4.0/), and the source code presented is licensed under the [GPLv3 license](http://www.gnu.org/licenses/gpl-3.0.html).
-
-
-
-
-
-
-

@@ -1,0 +1,10 @@
+sudo: true
+dist: trusty
+
+jobs:
+  include:
+    - stage: build docker image
+      script:
+      - docker build -t covidmutants .
+      - docker tag covidmutants covidmutants:latest
+      - docker run -i -t covidmutants:latest -forward TATgCCATTAgTgCAAAgAATAgAgCTCgCAC -reverse GTAATTGGAAcAAGcAAATTcTATGGTGGTTG -amplicon TATGCCATTAGTGCAAAGAATAGAGCTCGCACCGTAGCTGGTGTCTCTATCTGTAGTACTATGACCAATAGACAGTTTCATCAAAAATTATTGAAATCAATAGCCGCCACTAGAGGAGCTACTGTAGTAATTGGAACAAGCAAATTCTATGGTGGTTG -v -fasta test.fa.gz
