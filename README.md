@@ -72,7 +72,6 @@ usage: docker run -i -t --rm -v $(pwd):$(pwd) covidmutants
                 [-output OUTFILE] [-threads THREADS] [-all] [-json]
 
 
-optional arguments:
   -h, --help            show this help message and exit
   -fasta GENOMESFILE, -i GENOMESFILE, -in GENOMESFILE
                         Specify covid fasta genomes file
@@ -133,6 +132,50 @@ FAIL indicates that the primer sequences did not match the primers submitted. An
 
 If the sequences (primer or amplicon) are found but have too many sequence variants (e.g. more than `-max`), the accuracy of their sequences is questioned.
 The sequences are reported separately in the \<output\>.issue.fa file.
+
+
+## Extra scripts (export only)
+
+Three scripts are available.
+
+* `typetempsort .py` extra script, parsing GISAID compressed exportation files into variant/month output FASTA files
+* `oligomutk.py` the script run by the docker
+* `sortseq.py` extra script, summarising `oligomutk.py` output.
+
+#### `typetempsort .py` usage
+
+```plaintext
+usage: typetempsort.py [-h] -m METAPATH -f SEQUENCEPATH -s START_DATE -e END_DATE [-v VIRUS]
+
+Parse GISAID bulk files into monthly parcels.
+
+  -h, --help            show this help message and exit
+  -m METAPATH, --meta METAPATH
+                        File path to the GISAID "metadata_tsv_20xx_xx_xx.tar.xz" file
+  -f SEQUENCEPATH, --fasta SEQUENCEPATH
+                        File path to the GISAID "sequences_fasta_20xx_xx_xx.tar.xz" file
+  -s START_DATE, --start START_DATE
+                        Start date (inclusive): eg, 2020-05 (for May 2020)
+  -e END_DATE, --end END_DATE
+                        End date (inclusive): eg, 2021-05 (for May 2021)
+  -v VIRUS, --virus VIRUS
+                        Virus subtype to be extracted: eg, Mu, Alpha, Beta, Gamma, Delta, GH/490R, Lambda, Omicron or ALL
+```
+
+
+#### `sortseq.py` usage
+
+```plaintext
+usage: sortseq.py [-h] -i INFILE [-o OUTFILE]
+
+Summarise results.
+
+  -h, --help            show this help message and exit
+  -i INFILE, --in INFILE
+                        input file (oligomutk.py output)
+  -o OUTFILE, --out OUTFILE
+                        result/summary file (TSV formatted)
+```
 
 
 ## Issues
