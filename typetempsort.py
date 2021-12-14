@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # coding=utf-8
 # title           :typetempsort.py
-# description     :Monthly parsing according to variants
+# description     :Monthly parsing according to variants (very slow)
 # date            :20211214
 # version         :1.1.0
 # copyright       :Michael Bekaert

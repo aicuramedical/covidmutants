@@ -93,7 +93,7 @@ usage: docker run -i -t --rm -v $(pwd):$(pwd) covidmutants
 
 #### Start your own analysis
 
-With a `covid_genomes.fasta` as your multi-sequence fasta files (gzip compressed file are accepted) in the current directory.
+With a `covid_genomes.fasta` as your multi-sequence fasta files (gzip compressed files are accepted) in the current directory.
 
 ```sh
 docker run -i -t --rm -v "$(pwd)":"$(pwd)" -u $(id -u):$(id -g) covidmutants \
@@ -134,15 +134,15 @@ If the sequences (primer or amplicon) are found but have too many sequence varia
 The sequences are reported separately in the \<output\>.issue.fa file.
 
 
-## Extra scripts (export only)
+## Extra scripts (experimental)
 
 Three scripts are available.
 
-* `typetempsort .py` extra script, parsing GISAID compressed exportation files into variant/month output FASTA files
+* `typetempsort.py` extra script, parsing GISAID compressed exportation files into variant/month output FASTA files
 * `oligomutk.py` the script run by the docker
 * `sortseq.py` extra script, summarising `oligomutk.py` output.
 
-#### `typetempsort .py` usage
+#### `typetempsort.py` usage
 
 ```plaintext
 usage: typetempsort.py [-h] -m METAPATH -f SEQUENCEPATH -s START_DATE -e END_DATE [-v VIRUS]

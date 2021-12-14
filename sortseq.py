@@ -211,16 +211,16 @@ def mutsec(filepath: str, output: str):
     print('Number of accepted variations: ' + str(number_of_accepted_variations))
     print('Number of not accepted variations: ' + str(len(df) - number_of_pass - number_of_accepted_variations))
 
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Summarise results.')
+    parser.add_argument('-i', '--in', dest='infile', type=str, required=True,
+                        help='Input file (oligomutk.py output) ')
+    parser.add_argument('-o', '--out', dest='outfile', type=str, default='output.tsv',
+                        help='Result/summary file (TSV formatted)')
+    args = parser.parse_args()
 
-parser = argparse.ArgumentParser(description='Summarise results.')
-parser.add_argument('-i', '--in', dest='infile', type=str, required=True,
-                    help='input file (oligomutk.py output) ')
-parser.add_argument('-o', '--out', dest='outfile', type=str, default='output.tsv',
-                    help='result/summary file (TSV formatted)')
-args = parser.parse_args()
-
-if os.path.exists(args.infile):
-    mutsec(os.path.abspath(args.infile), os.path.abspath(args.outfile))
+    if os.path.exists(args.infile):
+        mutsec(os.path.abspath(args.infile), os.path.abspath(args.outfile))
 
 # Run oligomutk
 # Run the script
