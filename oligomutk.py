@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 # coding=utf-8
-# title           :covid.py
-# description     :Covid primer monitor
-# date            :20210519
-# version         :1.0
-# copyright       :Michaël Bekaert
+# title           :oligomutk.py
+# description     :Covid primer monitor / Mutant Screening
+# date            :20211214
+# version         :1.1.0
+# copyright       :Michael Bekaert
 # notes           :Needs KAT, emboss (water) and Biopython.
 # ==============================================================================
 
@@ -19,7 +19,7 @@ from functools import partial
 
 from Bio import SeqIO
 
-release = '1.0'
+release = '1.1.0'
 
 
 def collect_new(file, forward, reverse, path='/tmp/covid', verbose=False):
