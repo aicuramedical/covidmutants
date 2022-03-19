@@ -8,7 +8,7 @@ RUN apt -y update \
    && apt clean \
    && rm -rf /var/lib/apt/lists/*
 
-RUN pip3 install biopython
+RUN pip3 install biopython pandas joblib
 
 RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh \
    && sh Miniconda3-latest-Linux-x86_64.sh -b -p /usr/share/miniconda3 \
