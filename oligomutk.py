@@ -267,9 +267,9 @@ if __name__ == '__main__':
             print('\nANALYSED: ' + str(log_pass + log_fail) + '\n PASS:    ' + str(log_pass) + '\n FAIL:    ' + str(log_fail) + ('\n QUERY:   ' + str(log_issue) if log_issue > 0 else ''), file=sys.stdout)
 
             tmp = ''
-            if isinstance(probe, list) and len(probe) > 0:
+            if isinstance(args.probe, list) and len(args.probe) > 0:
                 probes = 0
-                for item in probe:
+                for item in args.probe:
                     probes += 1
                     tmp += 'PROBE' + str(probes) + '_DIFF\t'
 

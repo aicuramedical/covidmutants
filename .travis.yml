@@ -5,6 +5,5 @@ jobs:
   include:
     - stage: build docker image
       script:
-      - docker build -t covidmutants .
-      - docker tag covidmutants covidmutants:latest
-      - docker run -i -t covidmutants:latest -forward TATgCCATTAgTgCAAAgAATAgAgCTCgCAC -reverse GTAATTGGAAcAAGcAAATTcTATGGTGGTTG -amplicon TATGCCATTAGTGCAAAGAATAGAGCTCGCACCGTAGCTGGTGTCTCTATCTGTAGTACTATGACCAATAGACAGTTTCATCAAAAATTATTGAAATCAATAGCCGCCACTAGAGGAGCTACTGTAGTAATTGGAACAAGCAAATTCTATGGTGGTTG -v -fasta test.fa.gz
+      - docker docker build . --file Dockerfile --tag covidmutants:latest
+      - docker run covidmutants:latest -forward TATgCCATTAgTgCAAAgAATAgAgCTCgCAC -reverse GTAATTGGAAcAAGcAAATTcTATGGTGGTTG -amplicon TATGCCATTAGTGCAAAGAATAGAGCTCGCACCGTAGCTGGTGTCTCTATCTGTAGTACTATGACCAATAGACAGTTTCATCAAAAATTATTGAAATCAATAGCCGCCACTAGAGGAGCTACTGTAGTAATTGGAACAAGCAAATTCTATGGTGGTTG -v -fasta test.fa.gz
