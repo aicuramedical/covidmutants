@@ -17,7 +17,7 @@ RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh \
    && /usr/share/miniconda3/bin/conda install kat -y \
    && rm -f Miniconda3-latest-Linux-x86_64.sh
 
-COPY *.py /usr/local/bin
+COPY *.py /usr/local/bin/
 
 COPY test/* /output/
 
