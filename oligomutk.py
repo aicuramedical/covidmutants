@@ -243,7 +243,7 @@ if __name__ == '__main__':
     parser.add_argument('-reverse', '-2', dest='reverse', type=str, required=True, help='Specify reverse primer')
     parser.add_argument('-probe', dest='probe', nargs='+', type=str, help='Specify probe sequence(s)')
     parser.add_argument('-amplicon', dest='amplicon', type=str, help='Specify amplicon sequence')
-    parser.add_argument('-tmp', dest='tmp', type=str, default=tempfile._get_default_tempdir(), help='temporary folder location')
+    parser.add_argument('-tmp', dest='tmp', type=str, default=tempfile._get_default_tempdir(), help='Temporary folder location')
     parser.add_argument('-max', '-m', dest='max_diff', type=int, default=5, help='Maximum sequence variations before querying sequencing accuracy')
     parser.add_argument('-output', '-out', '-o', dest='outfile', type=str, default='output', help='Specify output file prefix')
     parser.add_argument('-threads', '-t', dest='threads', type=int, default=1, help='Maximum threads')
@@ -280,6 +280,9 @@ if __name__ == '__main__':
             if args.json:
                 with open(args.outfile + '.json', 'w') as outfile:
                     json.dump(genomes, outfile)
+
+            if args.sort:
+                subprocess.call('sortseq.py -i ' + args.outfile + '.tsv' + ' -o ' + args.outfile + '.summary.tsv', stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
 
             if os.path.exists(forward):
                 os.remove(forward)

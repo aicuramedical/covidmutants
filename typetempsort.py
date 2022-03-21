@@ -2,9 +2,9 @@
 # coding=utf-8
 # title           :typetempsort.py
 # description     :Monthly parsing according to variants (very slow)
-# date            :20211214
-# version         :1.1.0
-# copyright       :Michael Bekaert
+# date            :20220317
+# version         :1.2.0
+# copyright       :Micha\"el Bekaert
 # ==============================================================================
 
 import argparse
@@ -12,10 +12,11 @@ import codecs
 import datetime
 import os.path
 import tarfile
+import gzip
 
 from Bio import SeqIO
 
-release = '1.1.0'
+release = '1.2.0'
 
 date_time_obj = '%Y-%m-%d'
 variants = []
@@ -44,9 +45,9 @@ except:
     parser.print_help()
     exit(2)
 
-if args.virus == 'ALL':
+if args.virus.upper() == 'ALL':
     args.virus = None
-    variants = ['Mu', 'Alpha', 'Beta', 'Gamma', 'Delta', 'GH/490R', 'Lambda', 'Omicron']  # True as 2021-12-09
+    variants = ['MU', 'ALPHA', 'BETA', 'GAMMA', 'DELTA', 'GH/490R', 'LAMBDA', 'OMICRON']  # True as 2022-03-17
 
 print('Pre-select sequences...', end='\r')
 keep = {}
@@ -61,9 +62,9 @@ with tarfile.open(args.metapath, "r:xz") as tar:
                     nb_sequences += 1
                     try:
                         timestamp = datetime.datetime.strptime(dat[3], date_time_obj)
-                        if (args.virus is None or args.virus in dat[13]) and timestamp <= ends and timestamp >= starts:
+                        if (args.virus is None or args.virus.upper() in dat[13].upper()) and timestamp <= ends and timestamp >= starts:
                             if len(variants) > 0:
-                                for ext in variants:
+                                for ext.upper() in variants:
                                     if ext in dat[13]:
                                         keep[dat[0]] = [ext.replace('/', '_') + '_' + timestamp.strftime('%Y-%m'),
                                                         '[' + str(dat[10]) + '] [' + str(dat[11]) + '] [' + str(
@@ -83,21 +84,21 @@ if len(keep.keys()) > 0:
     nb_fastas = 0
     loop = round(nb_sequences / 100)
 
-    with tarfile.open(args.sequencepath, "r:xz") as tar:
+    with tarfile.open(args.sequencepath, 'r:xz') as tar:
         for member in tar.getmembers():
             if member.name == 'sequences.fasta':
 
                 # open destination files
                 file_handles = {}
                 for file in data_file:
-                    file_handles[file] = open(file + '.fasta', 'w')
+                    file_handles[file] = gzip.open(file + '.fasta.gz', 'wt')
 
                 print('Accessing sequences (that may take a while)... 0%', end='\r')
 
                 with tar.extractfile(member) as f:
-                    ft = codecs.getreader("utf-8")(f)
+                    ft = codecs.getreader('utf-8')(f)
 
-                    for record in SeqIO.parse(ft, "fasta"):
+                    for record in SeqIO.parse(ft, 'fasta'):
                         nb_fastas += 1
                         if nb_fastas % loop == 0:
                             print('Accessing sequences (that may take a while)... ' + str(

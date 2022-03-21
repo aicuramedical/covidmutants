@@ -1,23 +1,18 @@
 # COVIDmutants
-COVIDmutants is fast and scalable pipeline to check for the intact presence of SARS-CoV-2 Primers in an enormous collection of genome sequences and to report the findings.
+COVIDmutants is a fast and scalable pipeline to check for the intact presence of SARS-CoV-2 Primers in an enormous collection of genome sequences and to report the findings.
 
+## Associated publications
+
+> **Efficient screening of long oligonucleotides against hundred thousands of SARS-CoV-2 genome sequences**.
+> Weidmann M, Graf E, Lichterfeld D, El Wahed A and Bekaert M.
+> _Front.Virol._ 2022
+
+[![DOI](https://img.shields.io/badge/DOI-10.3389%2Ffviro.2022.835707-blue.svg)](https://doi.org/10.3389/fviro.2022.835707)
 
 ## How to use this repository?
 
 We foster the openness, integrity, and reproducibility of scientific research. This repository hosts the scripts and tools created for research.
 Please feel free to modify the scripts, please remember to credit the authors.
-
-
-## Prepare a docker
-
-All required files and tools run in a self-contained [docker](https://www.docker.com/) image.
-
-#### Clone the repository
-
-```sh
-git clone https://github.com/aicuramedical/covidmutants.git
-cd covidmutants
-```
 
 ## Prepare a docker
 
@@ -47,21 +42,17 @@ docker run -i -t --rm covidmutants \
   -fasta test.fa.gz
 ```
 
-
 ## Dependencies
 
-If you use the docker, we will not need to check dependency as the Dockerfile will contain all you need. But here are the details anyway:
+If you use the docker, we will not need to check dependencies, as the Dockerfile will contain all you need. But here are the details anyway:
 
 * [KAT](https://github.com/TGAC/KAT) v2.4.2+
 * [EMBOSS](http://emboss.open-bio.org/) v6.6.0+ suit, only [_water_](http://emboss.open-bio.org/rel/rel6/apps/water.html) is required for local alignments
 * [Python](https://www.python.org/) v3+ with [biopython](https://biopython.org/)
 
-
-
 ## Methodology
 
 We used a fast and scalable approach in order to screen the ever-growing number of genome sequences. To do so, we used K-mer of the exact size of the primer to mind through the genome using KAT mode "sect" ([Mapleson 2017](https://doi.org/10.1093/bioinformatics/btw663)). Kat calculates the K-mer coverage across every genome and reported the primer-coverage/integrity. Sequence that reported imperfect primer presence, were then properly aligned against the primers and the amplicon using Smith-Waterman ([Smith 1981](https://doi.org/10.1016/0022-2836%2881%2990087-5)) local alignment to find sequence variations. A custom python script handles the pipeline and reporting.
-
 
 ## Usage
 
@@ -79,21 +70,23 @@ usage: docker run -i -t --rm -v $(pwd):$(pwd) covidmutants
                         Specify forward primer
   -reverse REVERSE, -2 REVERSE
                         Specify reverse primer
-  -probe PROBE          Specify probe sequence
+  -probe PROBE          Specify probe sequence(s) [can be used multiple times]
   -amplicon AMPLICON    Specify amplicon sequence
   -max MAX_DIFF, -m MAX_DIFF
                         Maximum sequence variations before querying sequencing accuracy
+  -tmp PATH             Temporary folder location
   -output OUTFILE, -out OUTFILE, -o OUTFILE
                         Specify output file
   -threads THREADS, -t THREADS
                         Maximum threads
+  -sort                 Run the "sortseq.py" script
   -all, -a              Test all sequences (VERY slow)
   -json                 Export results matrix as JSON file (Experimental)
 ```
 
 #### Start your own analysis
 
-With a `covid_genomes.fasta` as your multi-sequence fasta files (gzip compressed files are accepted) in the current directory.
+With a `covid_genomes.fasta` as a multi-sequence fasta file (gzip compressed files are accepted) in the current directory.
 
 ```sh
 docker run -i -t --rm -v "$(pwd)":"$(pwd)" -u $(id -u):$(id -g) covidmutants \
@@ -105,13 +98,11 @@ docker run -i -t --rm -v "$(pwd)":"$(pwd)" -u $(id -u):$(id -g) covidmutants \
   -fasta "$(pwd)"/covid_genomes.fasta
 ```
 
-
 ## Results
 
 #### \<output\>.tsv file
 
 For each sequence submitted, the name and variation with the forward and reverse primers are reported. If the amplicon and/or probe sequence were provided, the sequence variations are reported only if the primers failed to pass the filter (or the parameter `-all` was specified.)
-
 
 ```plaintext
 GENOME_ID       PASS/FAIL   FORWARD_DIFF                          REVERSE_DIFF                        AMPLICON_DIFF
@@ -133,8 +124,7 @@ FAIL indicates that the primer sequences did not match the primers submitted. An
 If the sequences (primer or amplicon) are found but have too many sequence variants (e.g. more than `-max`), the accuracy of their sequences is questioned.
 The sequences are reported separately in the \<output\>.issue.fa file.
 
-
-## Extra scripts (experimental)
+## Extra scripts
 
 Three scripts are available.
 
@@ -162,6 +152,13 @@ Parse GISAID bulk files into monthly parcels.
                         Virus subtype to be extracted: eg, Mu, Alpha, Beta, Gamma, Delta, GH/490R, Lambda, Omicron or ALL
 ```
 
+###### Example
+
+```sh
+./typetempsort.py --meta metadata_tsv_20xx_xx_xx.tar.xz \
+  --fasta sequences_fasta_20xx_xx_xx.tar.xz \
+  --start 2021-10 --end 2021-10 --virus Delta
+```
 
 #### `sortseq.py` usage
 
@@ -177,17 +174,60 @@ Summarise results.
                         result/summary file (TSV formatted)
 ```
 
+###### Example
+
+```sh
+./sortseq.py -i docker_output.tsv -o output.summary.tsv
+```
+
+
+## Full pipeline (to reproduce the results in the publication)
+
+#### Prepare the GIT repository and docker
+
+```sh
+git clone https://github.com/aicuramedical/covidmutants.git
+cd covidmutants
+docker build --rm=true -t covidmutants .
+```
+
+#### Collect the sequences
+
+From GIDAID, manually download the metadata and sequences from the 2021-12-09: `metadata_tsv_2021_12_09.tar.xz` and `sequence_fasta_2021_12_09.tar.xz`. Then, split the file per month for the Delta variant:
+
+```sh
+./typetempsort.py --meta metadata_tsv_2021_12_09.tar.xz \
+  --fasta sequences_fasta_2021_12_09.tar.xz \
+  --start 2021-01 --end 2021-11 --virus Delta
+```
+
+Now you should have 11 files from `DELTA_2021-01.fasta.gz` to `DELTA_2021-11.fasta.gz`.
+
+#### Run the full analysis
+
+For each month/variant, run an analysis:
+
+```sh
+docker run -i -t --rm -v "$(pwd)":"$(pwd)" -u $(id -u):$(id -g) covidmutants \
+  -threads 15 -trust \
+  -forward TATgCCATTAgTgCAAAgAATAgAgCTCgCAC \
+  -reverse GTAATTGGAAcAAGcAAATTcTATGGTGGTTG \
+  -amplicon TATGCCATTAGTGCAAAGAATAGAGCTCGCACCGTAGCTGGTGTCTCTATCTGTAGTACTATGACCAATAGACAGTTTCATCAAAAATTATTGAAATCAATAGCCGCCACTAGAGGAGCTACTGTAGTAATTGGAACAAGCAAATTCTATGGTGGTTG \
+  -o "$(pwd)"/output \
+  -fasta "$(pwd)"/DELTA_2021-01.fasta.gz
+  -sort
+```
+
+The `output.tsv` file have the details results (produced by the `oligomutk.py` script), while the `output.summary.tsv` present the different mutations existing (produced by the `sortseq.py` script).
 
 ## Issues
 
 If you have any problems with or questions about the scripts, please contact us through a [GitHub issue](https://github.com/aicuramedical/covidmutants/issues).
 Any issue related to the scientific results themselves must be done directly with the authors.
 
-
 ## Contributing
 
 You are invited to contribute new features, fixes, or updates, large or small; we are always thrilled to receive pull requests, and do our best to process them as fast as we can.
-
 
 ## License and distribution
 
