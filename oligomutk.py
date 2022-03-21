@@ -2,14 +2,15 @@
 # coding=utf-8
 # title           :oligomutk.py
 # description     :Covid primer monitor / Mutant Screening
-# date            :20220317
-# version         :1.2.0
-# copyright       :Michael Bekaert
+# date            :20220321
+# version         :1.3.0
+# copyright       :Micha\"el Bekaert
 # notes           :Needs KAT, emboss (water) and Biopython
 # ==============================================================================
 
 import argparse
 import gzip
+import itertools
 import json
 import os
 import subprocess
@@ -20,7 +21,7 @@ from functools import partial
 from Bio import SeqIO
 from joblib import Parallel, delayed
 
-release = '1.2.0'
+release = '1.3.0'
 
 
 def seq_diff(seq1, seq2):
@@ -37,14 +38,47 @@ def seq_diff(seq1, seq2):
     return [ret, diff]
 
 
+def get_iupac_seq(primer):
+    iupac = {'A': ['A'], 'C': ['C'], 'G': ['G'], 'T': ['T'], 'U': ['U'], 'M': ['A', 'C'], 'R': ['A', 'G'], 'S': ['C', 'G'], 'W': ['A', 'T'], 'Y': ['C', 'T'], 'K': ['G', 'T'], 'V': ['A', 'C', 'G'], 'H': ['A', 'C', 'T'], 'D': ['A', 'G', 'T'], 'B': ['C', 'G', 'T'], 'N': ['A', 'C', 'G', 'T'], 'X': ['A', 'C', 'G', ' T']}
+
+    def expandgrid(itrs):
+        product = list(itertools.product(*reversed(itrs)))
+        return [[x[i] for x in product] for i in range(len(itrs))][::-1]
+
+    def get_iupac(n):
+        if n.upper() in iupac:
+            return iupac[n.upper()]
+
+    ret = []
+    x = expandgrid(list(map(get_iupac, list(primer))))
+    for i in range(0, len(x[0])):
+        tmp = ''
+        for j in range(0, len(x)):
+            tmp += x[j][i]
+        ret.append(tmp)
+
+    return ret
+
+
 def collect_new(file, forward, reverse, path='/tmp/seq', trust=False, verbose=False):
     print('Pre-processing the sequences', file=sys.stdout)
     forward_len = len(forward)
     reverse_len = len(reverse)
-    with open(path + '_forward.fa', 'w') as outfile:
-        outfile.write('>forward\n' + str(forward).upper() + '\n')
-    with open(path + '_reverse.fa', 'w') as outfile:
-        outfile.write('>reverse\n' + str(reverse).upper() + '\n')
+    forward_file = []
+    reverse_file = []
+
+    forward_seq = get_iupac_seq(str(forward).upper())
+    reverse_seq = get_iupac_seq(str(reverse).upper())
+
+    for i in range(0, len(forward_seq)):
+        with open(path + '_forward' + str(i + 1) + '.fa', 'w') as outfile:
+            forward_file.append(path + '_forward' + str(i + 1) + '.fa')
+            outfile.write('>forward\n' + str(forward_seq[i]) + '\n')
+
+    for i in range(0, len(reverse_seq)):
+        with open(path + '_reverse' + str(i + 1) + '.fa', 'w') as outfile:
+            reverse_file.append(path + '_reverse' + str(i + 1) + '.fa')
+            outfile.write('>reverse\n' + str(reverse_seq[i]) + '\n')
 
     if trust:
         if file.endswith('.gz'):
@@ -66,55 +100,56 @@ def collect_new(file, forward, reverse, path='/tmp/seq', trust=False, verbose=Fa
                 else:
                     print('"' + name + '" already exists!', file=sys.stderr)
 
-    if os.path.getsize(path + '_genomes.fa') > 32 and forward_len > 0 and reverse_len > 0:
-        return [path + '_genomes.fa', path + '_forward.fa', forward_len, path + '_reverse.fa', reverse_len]
+    if os.path.getsize(path + '_genomes.fa') > 32 and forward_len > 0 and reverse_len > 0 and len(forward_file) > 0 and len(reverse_file) > 0:
+        return [path + '_genomes.fa', forward_file, forward_len, reverse_file, reverse_len]
 
     return False
 
 
-def run_step1(file, forward, forward_len, reverse, reverse_len, path='/tmp/seq', cpu=1, verbose=False):
+def run_step1(file, forward_file, forward_len, reverse_file, reverse_len, path='/tmp/seq', cpu=1, verbose=False):
     print('Processing the sequences with KAT', file=sys.stdout)
     genomes = {}
 
-    cmd = 'kat sect -t ' + str(cpu) + ' -m ' + str(forward_len) + ' -o ' + path + '_forward ' + str(file) + ' ' + str(
-        forward)
-    if verbose:
-        print('... ' + cmd)
-    subprocess.call(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
-    if os.path.exists(path + '_forward-stats.tsv'):
-        with open(path + '_forward-stats.tsv', 'r') as fwin:
-            for line in fwin:
-                if not line.startswith('seq_name'):
-                    tab = line.split('\t')
-                    if len(tab) >= 9 and len(tab[0]) > 0 and len(tab[8]) > 0:
-                        if int(tab[8]) > 0:
-                            genomes[tab[0]] = {'forward': 1, 'forward_diff': '.' * forward_len}  # , 'forward_var': 0, 'forward_len': forward_len, 'forward_line': line}
-                        else:
-                            genomes[tab[0]] = {}  # 'forward_line': line}
-        os.remove(path + '_forward-stats.tsv')
-        os.remove(path + '_forward-counts.cvg')
+    for index, forward in enumerate(forward_file):
+        cmd = 'kat sect -t ' + str(cpu) + ' -m ' + str(forward_len) + ' -o ' + path + '_forward ' + str(file) + ' ' + str(forward)
+        if verbose:
+            print('... ' + cmd)
+        subprocess.call(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
+        if os.path.exists(path + '_forward-stats.tsv'):
+            with open(path + '_forward-stats.tsv', 'r') as fwin:
+                for line in fwin:
+                    if not line.startswith('seq_name'):
+                        tab = line.split('\t')
+                        if len(tab) >= 9 and len(tab[0]) > 0 and len(tab[8]) > 0:
+                            if int(tab[8]) > 0:
+                                genomes[tab[0]] = {'forward': index, 'forward_diff': '.' * forward_len, 'forward_var': 0}
+                            elif tab[0] not in genomes:
+                                genomes[tab[0]] = {}
+            os.remove(path + '_forward-stats.tsv')
+            os.remove(path + '_forward-counts.cvg')
 
-    cmd = 'kat sect -t ' + str(cpu) + ' -m ' + str(reverse_len) + ' -o ' + path + '_reverse ' + str(file) + ' ' + str(reverse)
-    if verbose:
-        print('... ' + cmd)
-    subprocess.call(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
-    if os.path.exists(path + '_reverse-stats.tsv'):
-        with open(path + '_reverse-stats.tsv', 'r') as rvin:
-            for line in rvin:
-                if not line.startswith('seq_name'):
-                    tab = line.split('\t')
-                    if len(tab) >= 9 and len(tab[0]) > 0 and len(tab[8]) > 0:
-                        if int(tab[8]) > 0:
-                            genomes[tab[0]].update({'reverse': 1, 'reverse_diff': '.' * reverse_len})  # , 'reverse_var': 0, 'reverse_len': reverse_len, 'reverse_line': line})
-                            # else:
-                            #    genomes[tab[0]].update({'reverse_line': line})
-        os.remove(path + '_reverse-stats.tsv')
-        os.remove(path + '_reverse-counts.cvg')
+    for index, reverse in enumerate(reverse_file):
+        cmd = 'kat sect -t ' + str(cpu) + ' -m ' + str(reverse_len) + ' -o ' + path + '_reverse ' + str(
+            file) + ' ' + str(reverse)
+        if verbose:
+            print('... ' + cmd)
+        subprocess.call(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
+        if os.path.exists(path + '_reverse-stats.tsv'):
+            with open(path + '_reverse-stats.tsv', 'r') as rvin:
+                for line in rvin:
+                    if not line.startswith('seq_name'):
+                        tab = line.split('\t')
+                        if len(tab) >= 9 and len(tab[0]) > 0 and len(tab[8]) > 0:
+                            if int(tab[8]) > 0:
+                                genomes[tab[0]].update({'reverse': index, 'reverse_diff': '.' * reverse_len, 'reverse_var': 0})
+
+            os.remove(path + '_reverse-stats.tsv')
+            os.remove(path + '_reverse-counts.cvg')
 
     return genomes
 
 
-def run_step2(genomes, file, forward, reverse, probe=None, amplicon=None, all=False, output=None, path='/tmp/seq', max_diff=5, cpu=1, verbose=False):
+def run_step2(genomes, file, forward_file, reverse_file, probe=None, amplicon=None, all=False, output=None, path='/tmp/seq', max_diff=5, cpu=1, verbose=False):
     def get_alignment(record):
         if verbose:
             print('  - Aligning: ' + str(record.id), file=sys.stdout)
@@ -139,17 +174,16 @@ def run_step2(genomes, file, forward, reverse, probe=None, amplicon=None, all=Fa
                     elif record2.id != 'local' and local is not None:
                         (seq, variations) = seq_diff(str(record2.seq), local)
                         if len(seq) > 1:
-                            if variations > max_diff or abs(len(str(record2.seq)) - len(local)) > max_diff:
-                                log_issue += 1
-                                genomes[record.id]['issue'] = log_issue
-                            genomes[record.id][record2.id.lower() + '_diff'] = seq
-                            # genomes[record.id][record2.id.lower() + '_var'] = variations
-                            # genomes[record.id][record2.id.lower() + '_len'] = len(str(record2.seq))
+                            if record2.id.lower() + '_var' not in genomes[record.id] or genomes[record.id][
+                                record2.id.lower() + '_var'] > variations:
+                                if variations > max_diff or abs(len(str(record2.seq)) - len(local)) > max_diff:
+                                    log_issue += 1
+                                    genomes[record.id]['issue'] = log_issue
+                                genomes[record.id][record2.id.lower() + '_diff'] = seq
+                                genomes[record.id][record2.id.lower() + '_var'] = variations
                         local = None
                     else:
-                        print(
-                            'Warning: "water" has generated a critical error for ' + record.id + ' sequence will be skipped.',
-                            file=sys.stderr)
+                        print('Warning: "water" has generated a critical error for ' + record.id + ' sequence will be skipped.', file=sys.stderr)
             if output is not None and record.id in check_sequence:
                 with open(output + ('.issue' if log_issue > 0 else '.fail') + '.fasta', 'a') as outfile:
                     outfile.write('>' + str(record.id) + '\n' + str(record.seq) + '\n')
@@ -159,8 +193,7 @@ def run_step2(genomes, file, forward, reverse, probe=None, amplicon=None, all=Fa
             if os.path.exists(path + tmp_name + '_local.fa'):
                 os.remove(path + tmp_name + '_local.fa')
         except:
-            print('Error: "water" has generated a critical error for ' + record.id + ' sequence will be skipped.',
-                  file=sys.stderr)
+            print('Error: "water" has generated a critical error for ' + record.id + ' sequence will be skipped.', file=sys.stderr)
 
     print('Checking the intriguing sequences with local alignments', file=sys.stdout)
 
@@ -173,7 +206,7 @@ def run_step2(genomes, file, forward, reverse, probe=None, amplicon=None, all=Fa
                 check_sequence.add(str(genome))
 
     if len(check_sequence) > 0:
-        subprocess.call('cat ' + forward + ' ' + reverse + '> ' + path + '_both.fa', stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
+        subprocess.call('cat ' + ' '.join(forward_file) + ' ' + ' '.join(reverse_file) + '> ' + path + '_both.fa', stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
 
         if (isinstance(probe, list) and len(probe) > 0) or amplicon is not None:
             with open(path + '_both.fa', 'a') as outfile:
@@ -259,13 +292,11 @@ if __name__ == '__main__':
         path = os.path.abspath(os.path.join(args.tmp, next(tempfile._get_candidate_names())))
         ret = collect_new(os.path.abspath(args.genomesfile), args.forward, args.reverse, path=path, trust=args.trust, verbose=args.verbose)
         if ret:
-            (file, forward, forward_len, reverse, reverse_len) = ret
-            genomes = run_step1(file, forward, forward_len, reverse, reverse_len, cpu=args.threads, path=path, verbose=args.verbose)
-            genomes = run_step2(genomes, file, forward, reverse, probe=args.probe, amplicon=args.amplicon, all=args.all, output=args.outfile, max_diff=args.max_diff, cpu=args.threads, path=path, verbose=args.verbose)
+            (file, forward_file, forward_len, reverse_file, reverse_len) = ret
+            genomes = run_step1(file, forward_file, forward_len, reverse_file, reverse_len, cpu=args.threads, path=path, verbose=args.verbose)
+            genomes = run_step2(genomes, file, forward_file, reverse_file, probe=args.probe, amplicon=args.amplicon, all=args.all, output=args.outfile, max_diff=args.max_diff, cpu=args.threads, path=path, verbose=args.verbose)
 
             (log_pass, log_fail, log_issue, log) = report(genomes, probe=args.probe, amplicon=args.amplicon)
-            print('\nANALYSED: ' + str(log_pass + log_fail) + '\n PASS:    ' + str(log_pass) + '\n FAIL:    ' + str(log_fail) + ('\n QUERY:   ' + str(log_issue) if log_issue > 0 else ''), file=sys.stdout)
-
             tmp = ''
             if isinstance(args.probe, list) and len(args.probe) > 0:
                 probes = 0
@@ -281,12 +312,19 @@ if __name__ == '__main__':
                 with open(args.outfile + '.json', 'w') as outfile:
                     json.dump(genomes, outfile)
 
-            if args.sort:
-                subprocess.call('sortseq.py -i ' + args.outfile + '.tsv' + ' -o ' + args.outfile + '.summary.tsv', stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
+            if args.run_sort:
+                cmd = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'sortseq.py') + '  -i ' + args.outfile + '.tsv' + ' -o ' + args.outfile + '.summary.tsv'
+                if args.verbose:
+                    print('... ' + cmd)
+                subprocess.call(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
 
-            if os.path.exists(forward):
-                os.remove(forward)
-            if os.path.exists(reverse):
-                os.remove(reverse)
+            print('\nANALYSED: ' + str(log_pass + log_fail) + '\n PASS:    ' + str(log_pass) + '\n FAIL:    ' + str(log_fail) + ('\n QUERY:   ' + str(log_issue) if log_issue > 0 else ''), file=sys.stdout)
+
+            for forward in forward_file:
+                if os.path.exists(forward):
+                    os.remove(forward)
+            for reverse in reverse_file:
+                if os.path.exists(reverse):
+                    os.remove(reverse)
             if os.path.exists(file):
                 os.remove(file)
