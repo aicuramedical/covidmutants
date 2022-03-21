@@ -281,8 +281,11 @@ if __name__ == '__main__':
                 with open(args.outfile + '.json', 'w') as outfile:
                     json.dump(genomes, outfile)
 
-            if args.sort:
-                subprocess.call('sortseq.py -i ' + args.outfile + '.tsv' + ' -o ' + args.outfile + '.summary.tsv', stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
+            if args.run_sort:
+                cmd = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'sortseq.py') + '  -i ' + args.outfile + '.tsv' + ' -o ' + args.outfile + '.summary.tsv'
+                if args.verbose:
+                    print('... ' + cmd)
+                subprocess.call(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
 
             if os.path.exists(forward):
                 os.remove(forward)
