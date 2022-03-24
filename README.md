@@ -35,7 +35,7 @@ docker build --rm=true -t covidmutants .
 
 ```sh
 docker run -i -t --rm covidmutants \
-  -threads 2 -v \
+  -threads 2 \
   -forward TATgCCATTAgTgCAAAgAATAgAgCTCgCAC \
   -reverse GTAATTGGAAcAAGcAAATTcTATGGTGGTTG \
   -amplicon TATGCCATTAGTGCAAAGAATAGAGCTCGCACCGTAGCTGGTGTCTCTATCTGTAGTACTATGACCAATAGACAGTTTCATCAAAAATTATTGAAATCAATAGCCGCCACTAGAGGAGCTACTGTAGTAATTGGAACAAGCAAATTCTATGGTGGTTG \
@@ -48,7 +48,7 @@ If you use the docker, we will not need to check dependencies, as the Dockerfile
 
 * [KAT](https://github.com/TGAC/KAT) v2.4.2+
 * [EMBOSS](http://emboss.open-bio.org/) v6.6.0+ suit, only [_water_](http://emboss.open-bio.org/rel/rel6/apps/water.html) is required for local alignments
-* [Python](https://www.python.org/) v3+ with [biopython](https://biopython.org/)
+* [Python](https://www.python.org/) v3.9+ with [biopython](https://biopython.org/)
 
 ## Methodology
 
