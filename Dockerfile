@@ -8,7 +8,7 @@ RUN apt -y update \
    && apt clean \
    && rm -rf /var/lib/apt/lists/*
 
-RUN pip3 install "biopython>=1.79" "pandas>=1.4.1" "numpy>=1.18.5" "joblib>=0.14" scipy matplotlib sphinx tabulate
+RUN pip3 install "biopython>=1.79" "pandas>=1.4.1" "numpy>=1.18.5" "joblib>=0.14" "scipy>=1.8.0" "matplotlib>=3.5.1" "sphinx>=4.4.0" "tabulate>=0.8.9"
 
 COPY *.py /usr/local/bin/
 
