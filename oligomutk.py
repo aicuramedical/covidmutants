@@ -2,8 +2,8 @@
 # coding=utf-8
 # title           :oligomutk.py
 # description     :Covid primer monitor / Mutant Screening
-# date            :20220321
-# version         :1.3.0
+# date            :20220831
+# version         :1.3.1
 # copyright       :Micha\"el Bekaert
 # notes           :Needs KAT, emboss (water) and Biopython
 # ==============================================================================
@@ -21,7 +21,7 @@ from functools import partial
 from Bio import SeqIO
 from joblib import Parallel, delayed
 
-release = '1.3.0'
+release = '1.3.1'
 
 
 def seq_diff(seq1, seq2):
@@ -278,7 +278,7 @@ if __name__ == '__main__':
     parser.add_argument('-amplicon', dest='amplicon', type=str, help='Specify amplicon sequence')
     parser.add_argument('-tmp', dest='tmp', type=str, default=tempfile._get_default_tempdir(), help='Temporary folder location')
     parser.add_argument('-max', '-m', dest='max_diff', type=int, default=5, help='Maximum sequence variations before querying sequencing accuracy')
-    parser.add_argument('-output', '-out', '-o', dest='outfile', type=str, default='output', help='Specify output file prefix')
+    parser.add_argument('-output', '-out', '-o', dest='outfile', type=str, default='./output', help='Specify output file prefix')
     parser.add_argument('-threads', '-t', dest='threads', type=int, default=1, help='Maximum threads')
     parser.add_argument('-all', '-a', dest='all', action='store_true', default=False, help='Test all sequences (Slow)')
     parser.add_argument('-sort', '-s', dest='run_sort', action='store_true', default=False, help='Run "sortseq.py" script')
@@ -313,7 +313,7 @@ if __name__ == '__main__':
                     json.dump(genomes, outfile)
 
             if args.run_sort:
-                cmd = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'sortseq.py') + '  -i ' + args.outfile + '.tsv' + ' -o ' + args.outfile + '.summary.tsv'
+                cmd = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'sortseq.py') + ' -i ' + args.outfile + '.tsv' + ' -o ' + args.outfile + '.summary.tsv'
                 if args.verbose:
                     print('... ' + cmd)
                 subprocess.call(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
