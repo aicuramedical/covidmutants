@@ -2,9 +2,10 @@
 # coding=utf-8
 # title           :typetempsort.py
 # description     :Monthly parsing according to variants (very slow)
-# date            :20220317
-# version         :1.2.0
+# date            :20221020
+# version         :1.2.1
 # copyright       :Micha\"el Bekaert
+# notes           :compatible only with metadata file with 24 fields!
 # ==============================================================================
 
 import argparse
@@ -16,7 +17,7 @@ import gzip
 
 from Bio import SeqIO
 
-release = '1.2.0'
+release = '1.2.1'
 
 date_time_obj = '%Y-%m-%d'
 variants = []
@@ -31,7 +32,7 @@ parser.add_argument('-s', '--start', dest='start_date', type=str, required=True,
 parser.add_argument('-e', '--end', dest='end_date', type=str, required=True,
                     help='End date (inclusive): eg, 2021-05 (for May 2021)')
 parser.add_argument('-v', '--virus', dest='virus',
-                    help='Virus subtype to be extracted: eg, Mu, Alpha, Beta, Gamma, Delta, GH/490R, Lambda, Omicron or ALL')
+                    help='Virus subtype to be extracted: eg, Alpha, Beta, Gamma, Delta, GH/490R, Epsilon, Eta, Iota,Kappa, Lambda, Mu, Theta, Zeta, Omicron or ALL')
 args = parser.parse_args()
 
 if not os.path.exists(args.metapath) or not os.path.exists(args.sequencepath):
@@ -47,8 +48,10 @@ except:
 
 if args.virus.upper() == 'ALL':
     args.virus = None
-    variants = ['MU', 'ALPHA', 'BETA', 'GAMMA', 'DELTA', 'GH/490R', 'LAMBDA', 'OMICRON']  # True as 2022-03-17
-
+    variants = ['ALPHA', 'BETA', 'DELTA', 'GAMMA', 'OMICRON', 'EPSILON', 'ETA', 'IOTA' ,'KAPPA', 'LAMBDA' ,' MU', 'THETA' ,' ZETA', 'GH/490R']  # True as 2022-10-20
+else:
+	variants.append(args.virus.upper())
+	
 print('Pre-select sequences...', end='\r')
 keep = {}
 data_file = set()
@@ -58,22 +61,17 @@ with tarfile.open(args.metapath, "r:xz") as tar:
         if member.name == 'metadata.tsv':
             for sequence in tar.extractfile(member).readlines():
                 dat = sequence.decode().split('\t')
-                if len(dat) > 14 and dat[3].startswith('20'):
+                if len(dat) == 24 and dat[5].startswith('20'):
                     nb_sequences += 1
                     try:
-                        timestamp = datetime.datetime.strptime(dat[3], date_time_obj)
-                        if (args.virus is None or args.virus.upper() in dat[13].upper()) and timestamp <= ends and timestamp >= starts:
-                            if len(variants) > 0:
-                                for ext.upper() in variants:
-                                    if ext in dat[13]:
-                                        keep[dat[0]] = [ext.replace('/', '_') + '_' + timestamp.strftime('%Y-%m'),
-                                                        '[' + str(dat[10]) + '] [' + str(dat[11]) + '] [' + str(
-                                                            dat[13]) + ']']
-                                        data_file.add(ext.replace('/', '_') + '_' + timestamp.strftime('%Y-%m'))
-                            else:
-                                keep[dat[0]] = [timestamp.strftime('%Y-%m'),
-                                                '[' + str(dat[10]) + '] [' + str(dat[11]) + '] [' + str(dat[13]) + ']']
-                                data_file.add(timestamp.strftime('%Y-%m'))
+                        timestamp = datetime.datetime.strptime(dat[5], date_time_obj)
+                        if timestamp <= ends and timestamp >= starts:
+                            for ext in variants:
+                                if ' ' + ext in dat[15].upper():
+                                    keep[dat[0]] = [ext.replace('/', '_') + '_' + timestamp.strftime('%Y-%m'),
+                                                    '[' + str(dat[12]) + '] [' + str(dat[13]) + '] [' + str(
+                                                        dat[15]) + ']']
+                                    data_file.add(ext.replace('/', '_') + '_' + timestamp.strftime('%Y-%m'))
                     except:
                         pass
 
