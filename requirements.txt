@@ -1,4 +1,5 @@
-biopython>=1.79
-pandas>=1.4.1
-numpy>=1.18.5
-joblib>=0.14
+biopython>=1.81
+pandas>=2.0.1
+numpy>=1.24.3
+joblib>=1.2.0
+

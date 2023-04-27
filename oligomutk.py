@@ -2,8 +2,8 @@
 # coding=utf-8
 # title           :oligomutk.py
 # description     :Covid primer monitor / Mutant Screening
-# date            :20220831
-# version         :1.3.1
+# date            :20230427
+# version         :1.3.2
 # copyright       :Micha\"el Bekaert
 # notes           :Needs KAT, emboss (water) and Biopython
 # ==============================================================================
@@ -21,7 +21,7 @@ from functools import partial
 from Bio import SeqIO
 from joblib import Parallel, delayed
 
-release = '1.3.1'
+release = '1.3.2'
 
 
 def seq_diff(seq1, seq2):
@@ -174,8 +174,7 @@ def run_step2(genomes, file, forward_file, reverse_file, probe=None, amplicon=No
                     elif record2.id != 'local' and local is not None:
                         (seq, variations) = seq_diff(str(record2.seq), local)
                         if len(seq) > 1:
-                            if record2.id.lower() + '_var' not in genomes[record.id] or genomes[record.id][
-                                record2.id.lower() + '_var'] > variations:
+                            if record2.id.lower() + '_var' not in genomes[record.id] or genomes[record.id][record2.id.lower() + '_var'] > variations:
                                 if variations > max_diff or abs(len(str(record2.seq)) - len(local)) > max_diff:
                                     log_issue += 1
                                     genomes[record.id]['issue'] = log_issue
@@ -271,7 +270,7 @@ def report(genomes, probe=None, amplicon=None):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('-fasta', '-i', '-in', dest='genomesfile', type=str, required=True, help='Specify covid fasta genomes file')
+    parser.add_argument('-fasta', '-i', '-in', dest='genomesfile', type=str, required=True, help='Specify virus fasta genomes file')
     parser.add_argument('-forward', '-1', dest='forward', type=str, required=True, help='Specify forward primer')
     parser.add_argument('-reverse', '-2', dest='reverse', type=str, required=True, help='Specify reverse primer')
     parser.add_argument('-probe', dest='probe', nargs='+', type=str, help='Specify probe sequence(s)')

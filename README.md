@@ -48,7 +48,7 @@ If you use the docker, we will not need to check dependencies, as the Dockerfile
 
 * [KAT](https://github.com/TGAC/KAT) v2.4.2+
 * [EMBOSS](http://emboss.open-bio.org/) v6.6.0+ suit, only [_water_](http://emboss.open-bio.org/rel/rel6/apps/water.html) is required for local alignments
-* [Python](https://www.python.org/) v3.9+ with [biopython](https://biopython.org/)
+* [Python](https://www.python.org/) v3.11+ with [biopython](https://biopython.org/)
 
 ## Methodology
 
@@ -140,10 +140,8 @@ usage: typetempsort.py [-h] -m METAPATH -f SEQUENCEPATH -s START_DATE -e END_DAT
 Parse GISAID bulk files into monthly parcels.
 
   -h, --help            show this help message and exit
-  -m METAPATH, --meta METAPATH
-                        File path to the GISAID "metadata_tsv_20xx_xx_xx.tar.xz" file
-  -f SEQUENCEPATH, --fasta SEQUENCEPATH
-                        File path to the GISAID "sequences_fasta_20xx_xx_xx.tar.xz" file
+  -i INPUTPATH, --input INPUTPATH
+                        File path to the GISAID "Downloads > Genomic epidemilogy - nextregions" export file "hcov_xxxxxx_xxxx-xx-xx_xx-xx.tar.gz" file
   -s START_DATE, --start START_DATE
                         Start date (inclusive): eg, 2020-05 (for May 2020)
   -e END_DATE, --end END_DATE
@@ -155,9 +153,8 @@ Parse GISAID bulk files into monthly parcels.
 ###### Example
 
 ```sh
-./typetempsort.py --meta metadata_tsv_20xx_xx_xx.tar.xz \
-  --fasta sequences_fasta_20xx_xx_xx.tar.xz \
-  --start 2021-10 --end 2021-10 --virus Delta
+./typetempsort.py --input hcov_xxxxxx_xxxx-xx-xx_xx-xx.tar.gz \
+  --start 2020-05 --end 2023-04 --virus Delta
 ```
 
 #### `sortseq.py` usage
@@ -193,15 +190,14 @@ docker build --rm=true -t covidmutants .
 
 #### Collect the sequences
 
-From GIDAID, manually download the metadata and sequences from the 2021-12-09: `metadata_tsv_2021_12_09.tar.xz` and `sequence_fasta_2021_12_09.tar.xz`. Then, split the file per month for the Delta variant:
+From GIDAID, manually download the metadata and sequences from the 2023-04-25 for oceania only: "Downloads" > "Genomic epidemilogy - nextregions" > "Oceania": `hcov_oceania_2023-04-25_08-29.tar.gz`. Then, split the file per month for the Omicron variant:
 
 ```sh
-./typetempsort.py --meta metadata_tsv_2021_12_09.tar.xz \
-  --fasta sequences_fasta_2021_12_09.tar.xz \
-  --start 2021-01 --end 2021-11 --virus Delta
+./typetempsort.py --input hcov_oceania_2023-04-25_08-29.tar.gz \
+  --start 2021-12 --end 2023-04 --virus Omicron
 ```
 
-Now you should have 11 files from `DELTA_2021-01.fasta.gz` to `DELTA_2021-11.fasta.gz`.
+Now you should have 17 files from `OMICRON_2021-12.fasta.gz` to `OMICRON_2023-04.fasta.gz`.
 
 #### Run the full analysis
 
@@ -214,7 +210,7 @@ docker run -i -t --rm -v "$(pwd)":"$(pwd)" -u $(id -u):$(id -g) covidmutants \
   -reverse GTAATTGGAAcAAGcAAATTcTATGGTGGTTG \
   -amplicon TATGCCATTAGTGCAAAGAATAGAGCTCGCACCGTAGCTGGTGTCTCTATCTGTAGTACTATGACCAATAGACAGTTTCATCAAAAATTATTGAAATCAATAGCCGCCACTAGAGGAGCTACTGTAGTAATTGGAACAAGCAAATTCTATGGTGGTTG \
   -o "$(pwd)"/output \
-  -fasta "$(pwd)"/DELTA_2021-01.fasta.gz
+  -fasta "$(pwd)"/OMICRON_2022-11.fasta.gz
   -sort
 ```
 

@@ -2,8 +2,8 @@
 # coding=utf-8
 # title           :sortseq.py
 # description     :Counting of mutants
-# date            :20211214
-# version         :1.1.0
+# date            :20230427
+# version         :1.3.2
 # copyright       :Elena Graf
 # notes           :Needs numpy and pandas.
 # ==============================================================================
@@ -15,7 +15,7 @@ import re
 import numpy as np
 import pandas as pd
 
-release = '1.1.0'
+release = '1.3.2'
 
 
 def mutsec(filepath: str, output: str):
@@ -197,7 +197,7 @@ def mutsec(filepath: str, output: str):
     }
 
     df_final = pd.DataFrame(data=d)
-    df_final_with_pairs = df_pairs_counter.append(df_final, ignore_index=True)
+    df_final_with_pairs = df_pairs_counter._append(df_final, ignore_index=True)
 
     # Export to Excel Table
     df_final.to_csv(output, sep='\t')
